@@ -3,7 +3,7 @@
 # Register your models here.
 
 from django.contrib import admin
-from .models import Profile, Quiz
+from .models import Profile, Quiz, Category, SubCategory
 
 @admin.register(Profile)
 class ProfileAdmin(admin.ModelAdmin):
@@ -12,5 +12,15 @@ class ProfileAdmin(admin.ModelAdmin):
 
 @admin.register(Quiz)
 class QuizAdmin(admin.ModelAdmin):
-    list_display = ('title', 'description')   
+    list_display = ('title', 'description', 'questions')  
+
+
+@admin.register(Category)
+class QuizAdmin(admin.ModelAdmin):
+    list_display = ('name',)   
+
+
+@admin.register(SubCategory)
+class QuizAdmin(admin.ModelAdmin):
+    list_display = ('name',)   
     

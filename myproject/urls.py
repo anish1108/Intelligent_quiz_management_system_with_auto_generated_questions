@@ -30,7 +30,11 @@ urlpatterns = [
     path('home', views.home_view, name='home'),
     path('edit_profile', views.edit_profile_view, name='edit_profile'),
     path('start_quiz', views.start_quiz_view, name="start_quiz"),
-    path('logout', views.logout_view, name="logout")
+    path('submit_quiz', views.submit_quiz_view, name='submit_quiz'),
+    path('logout', views.logout_view, name="logout"),
+    path('retake_quiz', views.retake_quiz_view, name="retake_quiz"),
+    path('create_quiz', views.create_quiz_view, name='create_quiz'),
+    path('dashboard', views.dashboard_view, name='dashboard')
 ]
 
 
