@@ -48,3 +48,4 @@ htmlcov/
 # Python environments
 pip-log.txt
 pip-delete-this-directory.txt
+.env

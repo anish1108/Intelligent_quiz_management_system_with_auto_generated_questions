@@ -75,7 +75,7 @@ def edit_profile_view(request):
 def logout_view(request):
     logout(request)
     return redirect('login')
-
+@login_required
 def start_quiz_view(request):
     if request.method == "POST":
         category_id = request.POST.get('category')
@@ -124,7 +124,7 @@ def start_quiz_view(request):
                 {"role": "system", "content": system_prompt},
                 {"role": "user", "content": prompt}],
             max_tokens=500,
-            temperature=0.8
+            temperature=1
         )
        
 
