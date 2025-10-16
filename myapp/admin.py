@@ -22,5 +22,13 @@ class QuizAdmin(admin.ModelAdmin):
 
 @admin.register(SubCategory)
 class QuizAdmin(admin.ModelAdmin):
-    list_display = ('name',)   
+    list_display = ('name',)  
+
+# @admin.register(QuizAttempt)
+# class QuizAdmin(admin.ModelAdmin):
+#     list_display = ('score')  
+
+# @admin.register(Leaderboard)
+# class QuizAdmin(admin.ModelAdmin):
+#     list_display = ('score')   
     

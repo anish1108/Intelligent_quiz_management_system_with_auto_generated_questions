@@ -1,5 +1,6 @@
-from datetime import timezone
-from django.shortcuts import render, redirect
+# from datetime import timezone
+from django.utils import timezone
+from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.models import User
 from django.contrib.auth.decorators import login_required
@@ -105,6 +106,8 @@ def start_quiz_view(request):
         - "question": string
         - "options": list of 4 strings
         - "answer": the correct option text
+        - "explanation": a short explanation of why that answer is correct
+        - it should not in the list of this recent questions 
         Example:
         [
             {{
@@ -156,16 +159,48 @@ def submit_quiz_view(request):
         score = 0
         total_questions = len(questions)
 
+        results = []
+        correct_streak = 0
+        max_correct_streak = 0  # for in-quiz streak
+
         for i, question in enumerate(questions):
             selected_answer = request.POST.get(f"question{i+1}")
-            if selected_answer == question['answer']:
+            is_correct = selected_answer == question['answer']
+
+            if is_correct:
                 score += 1
+                correct_streak += 1
+                max_correct_streak = max(max_correct_streak, correct_streak)
+            else:
+                correct_streak = 0  # reset in-quiz streak
+
+            results.append({
+                "question": question['question'],
+                "selected_answer": selected_answer or "No answer selected",
+                "correct_answer": question['answer'],
+                "explanation": question.get("explanation", "Explanation not available."),
+                "is_correct": is_correct
+            })
 
         quiz_attempt.score = score
+        quiz_attempt.completed_at = timezone.now()
         quiz_attempt.save()
 
-        return render(request, 'scoreCard.html', {'score': score, 'total': total_questions})
+        # 🆕 Update streak
+        profile = request.user.profile
+        profile.update_streak()
+
+        return render(request, 'scoreCard.html', {
+            'score': score,
+            'total': total_questions,
+            'results': results,
+            'quiz_id': quiz.id,
+            'daily_streak': profile.daily_streak,
+            'max_streak': max_correct_streak,  # show in-quiz streak
+        })
+
     return redirect('home')
+
 
 def retake_quiz_view(request):
     quiz_attempt_id = request.session.get('quiz_attempt_id')
@@ -183,18 +218,51 @@ def create_quiz_view(request):
     return None
 
 
+@login_required
 def dashboard_view(request):
     user = request.user
-    total_score = QuizAttempt.objects.filter(user=user).aggregate(total=Sum("score"))["total"] or 0
-    total_quizzes = QuizAttempt.objects.filter(user=user).count()
-    avg_score = QuizAttempt.objects.filter(user=user).aggregate(avg=Avg("score"))["avg"] or 0
+    profile = user.profile
 
-    # Recent 10 attempts
-    recent_quizzes = QuizAttempt.objects.filter(user=user).select_related("quiz").order_by("-completed_at")[:10]
+    # Fetch last 10 attempts, ordered by most recent start time
+    recent_quizzes = (
+        QuizAttempt.objects.filter(user=user)
+        .select_related('quiz')
+        .order_by('-started_at')[:10]
+    )
 
-    return render(request, "dashboard.html", {
-        "total_score": total_score,
-        "total_quizzes": total_quizzes,
-        "avg_score": round(avg_score, 2),
-        "recent_quizzes": recent_quizzes,
-    })
+    leaderboard = (
+        QuizAttempt.objects.values('user__username')
+        .annotate(total_score=Sum('score'))
+        .order_by('-total_score')[:10]
+    )
+
+    context = {
+        'profile': profile,
+        'recent_quizzes': recent_quizzes,
+        'leaderboard': [
+            {'name': u['user__username'], 'total_score': u['total_score']}
+            for u in leaderboard
+        ],
+        'total_score': sum(q.score for q in recent_quizzes),
+        'total_quizzes': recent_quizzes.count(),
+        'avg_score': round(
+            sum(q.score for q in recent_quizzes) / recent_quizzes.count(), 2
+        ) if recent_quizzes else 0,
+    }
+    return render(request, 'dashboard.html', context)
+
+
+@login_required
+def resume_quiz(request, quiz_id):
+    quiz = get_object_or_404(Quiz, id=quiz_id)
+    attempt = QuizAttempt.objects.filter(
+        user=request.user, quiz=quiz, completed_at__isnull=True
+    ).last()
+
+    if not attempt:
+        attempt = QuizAttempt.objects.create(user=request.user, quiz=quiz)
+
+    request.session['quiz_attempt_id'] = attempt.id
+    questions = quiz.questions
+    return render(request, "quiz.html", {"questions": questions, "submitted": False})
+

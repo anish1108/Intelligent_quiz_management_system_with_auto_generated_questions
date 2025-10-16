@@ -34,7 +34,9 @@ urlpatterns = [
     path('logout', views.logout_view, name="logout"),
     path('retake_quiz', views.retake_quiz_view, name="retake_quiz"),
     path('create_quiz', views.create_quiz_view, name='create_quiz'),
-    path('dashboard', views.dashboard_view, name='dashboard')
+    path('dashboard', views.dashboard_view, name='dashboard'),
+    # path('resume/<int:quiz_id>/', views.resume_quiz, name='resume_quiz'),
+    path("resume_quiz/<int:quiz_id>/", views.resume_quiz, name="resume_quiz"),
 ]
 
 

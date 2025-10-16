@@ -114,7 +114,7 @@
         <span class="navbar-toggler-icon"></span>
       </button>
 
-      <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <div class="collapse navbar-collapse gap-4" id="navbarSupportedContent">
         <ul class="navbar-nav me-auto mb-2 mb-lg-0">
           <li class="nav-item">
             <a class="nav-link active" aria-current="page" href="/home">Home</a>
@@ -122,29 +122,35 @@
           <li class="nav-item">
             <a class="nav-link" href="#">Quizzes</a>
           </li>
-          <li class="nav-item">
+          {% comment %} <li class="nav-item">
             <a class="nav-link" href="#">Leaderboard</a>
-          </li>
+          </li> {% endcomment %}
         </ul>
 
         <!-- Search -->
-        <form class="d-flex me-3" role="search">
+        {% comment %} <form class="d-flex me-3" role="search">
           <input class="form-control me-2" type="search" placeholder="Search quizzes..." aria-label="Search" />
           <button class="btn btn-outline-success" type="submit">Search</button>
-        </form>
+        </form> {% endcomment %}
 
         <!-- Auth Buttons -->
         <div class="d-flex">
           {% if user.is_authenticated %}
           <form method="post" action="logout">
             {% csrf_token %}
-            <button type="submit" class="btn btn-danger mx-2">Logout</button>
+            {% comment %} <button type="submit" class="btn btn-danger mx-2">Logout</button> {% endcomment %}
           </form>
           {% else %}
           <a href="signup" class="btn btn-dark mx-2">Signup</a>
           <a href="login" class="btn btn-dark mx-2">Login</a>
           {% endif %}
         </div>
+
+        <span>
+              {% comment %} 🔥<strong>{{ daily_streak }}</strong>  {% endcomment %}
+              <h5>🔥{{daily_streak}}</h5>
+              {% comment %} {{ daily_streak|pluralize }} {% endcomment %}
+        </span>
 
         <!-- Profile Avatar -->
         {% if user.is_authenticated %}

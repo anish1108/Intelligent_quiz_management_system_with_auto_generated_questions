@@ -3,6 +3,8 @@ from django.contrib.auth.models import User
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.contrib.postgres.fields import JSONField
+from datetime import timedelta
+from django.utils import timezone
 
 # Create your models here.
 
@@ -12,6 +14,25 @@ class Profile(models.Model):
     name = models.CharField(max_length=20,blank=True, null=True, default="new user")
     bio = models.TextField(blank=True)
     avatar = models.ImageField(upload_to='avatars/', blank=True, null=True, default='avatars/default.png')
+
+     # 🆕 Add streak tracking fields
+    daily_streak = models.IntegerField(default=0)
+    last_quiz_date = models.DateField(blank=True, null=True)
+
+    def update_streak(self):
+        """Updates daily streak when a user completes a quiz."""
+        today = timezone.now().date()
+
+        if self.last_quiz_date == today:
+            return  # already played today
+
+        elif self.last_quiz_date == today - timedelta(days=1):
+            self.daily_streak += 1  # continue streak
+        else:
+            self.daily_streak = 1  # reset streak
+
+        self.last_quiz_date = today
+        self.save()
 
     def __str__(self):
         return self.user.username
